@@ -14,6 +14,9 @@
 </head>
 <body>
 
+  <!-- 固定背景層：整頁鋪滿，永不移動 -->
+  <div class="bg-fixed" aria-hidden="true"></div>
+
   <!-- 導覽列 -->
   <div class="topbar" id="top">
     <div class="navwrap">
@@ -32,37 +35,39 @@
   </div>
 
   <div class="topbar-banner">
-        <img src="img/上方工作欄_文字.png" alt="聯展導覽文字裝飾" loading="lazy" />
-    </div>
+    <img src="img/上方工作欄_文字.png" alt="聯展導覽文字裝飾" loading="lazy" />
+  </div>
 
   <!-- 主視覺 -->
   <header class="hero" id="home">
-  <img class="title-mark" src="img/中間主題.png" alt="聯展標題覆蓋圖" />
+    <img class="title-mark" src="img/中間主題.png" alt="聯展標題覆蓋圖" />
 
-  <!-- 新增：滑動按鈕 -->
-  <a href="#dept" class="scroll-btn" onclick="scrollToDept(event)">▼ 展開探索 ▼</a>
+    <!-- 展開探索按鈕 -->
+    <a href="#dept" class="scroll-btn" onclick="scrollToDept(event)">▼ 展開探索 ▼</a>
 
-
-  <div class="hero-inner">
-    <div class="dept-grid" id="dept">
-      <a class="dept-link" href="#" target="_blank" rel="noopener">
-        <img class="dept-img" src="img/圖傳按鈕.png" alt="國文傳播學系 Be Continued" />
-      </a>
-      <a class="dept-link" href="#" target="_blank" rel="noopener">
-        <img class="dept-img" src="img/科技按鈕.png" alt="科技應用與人資發展學系 Tech Odyssey" />
-      </a>
+    <div class="hero-inner">
+      <div class="dept-grid" id="dept">
+        <a class="dept-link" href="#" target="_blank" rel="noopener">
+          <img class="dept-img" src="img/圖傳按鈕.png" alt="國文傳播學系 Be Continued" />
+        </a>
+        <a class="dept-link" href="#" target="_blank" rel="noopener">
+          <img class="dept-img" src="img/科技按鈕.png" alt="科技應用與人資發展學系 Tech Odyssey" />
+        </a>
+      </div>
     </div>
-  </div>
-</header>
-
+  </header>
 
   <!-- 聯展介紹 -->
   <section id="about" class="section">
+    <!-- ✅ 黏住頂端的淡出漸層（承接 hero 的灰黑遮罩） -->
+    <div class="section-fade" aria-hidden="true"></div>
+
     <div class="glass">
       <h2>聯展介紹</h2>
       <p class="muted">這裡撰寫展覽緣起、策展主題、指導單位、聯絡方式、開放時間等。</p>
     </div>
   </section>
+
 
   <!-- FAQ -->
   <section id="faq" class="section">
