@@ -1,41 +1,90 @@
-// === 捲動時高亮目前所在區塊的導覽按鈕 ===
-const navLinks = [...document.querySelectorAll('#nav a')];
-const sections = navLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+// 平滑捲動到 #dept
+function scrollToDept(e){
+  if(e) e.preventDefault();
+  const target = document.getElementById('dept');
+  if (!target) return;
+  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
-const io = new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){
-      navLinks.forEach(l=>l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+(function(){
+  // 是否尊重使用者「降低動效」設定
+  const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function smoothScrollTo(el){
+    if (!el) return;
+    if (prefersReduce) {
+      el.scrollIntoView(); // 直接到位，不做動畫
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  });
-}, {rootMargin:'-40% 0px -55% 0px', threshold:0});
-sections.forEach(s=>io.observe(s));
-
-function scrollToDept(event) {
-  event.preventDefault(); // 阻止預設跳轉
-
-  const target   = document.getElementById('dept');
-  const offset   = -200;    // 上方預留距離
-  const duration = 2000;    // 總時長（ms），越大越慢
-
-  const start    = window.scrollY || window.pageYOffset;
-  const end      = target.getBoundingClientRect().top + start + offset;
-  const distance = end - start;
-  const startTime = performance.now();
-
-  // 若有在 CSS 設定 html { scroll-behavior: smooth; }，可能造成「雙重平滑」
-  // 建議移除或在這裡強制用程式動畫。
-  function animate(now) {
-    const elapsed  = now - startTime;
-    const progress = Math.min(elapsed / duration, 1);   // 0 → 1
-    const linear   = progress;                          // ✅ 均速
-
-    window.scrollTo(0, start + distance * linear);
-
-    if (progress < 1) requestAnimationFrame(animate);
   }
 
-  requestAnimationFrame(animate);
-}
+  // 1) 攔截導覽列或頁面內所有 href 以 # 開頭的連結
+  document.addEventListener('click', function(e){
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;                   // 不是 hash 錨點就略過
+    const hash = a.getAttribute('href');
+
+    // 像 href="#" 或 href="#!" 這類不是真實錨點的，不處理
+    if (!hash || hash.length <= 1 || hash === '#!') return;
+
+    const id = decodeURIComponent(hash.slice(1));
+    const target = document.getElementById(id);
+    if (!target) return;              // 找不到對應元素就讓瀏覽器自己處理
+
+    e.preventDefault();               // 阻止預設「瞬間跳轉」
+    smoothScrollTo(target);           // 平滑滑動
+
+    // 更新網址 hash（不觸發預設跳轉）
+    if (history.pushState) {
+      history.pushState(null, '', '#'+id);
+    } else {
+      // 舊瀏覽器備援，可能會瞬跳（已經 preventDefault，大多不會）
+      location.hash = id;
+    }
+  });
+
+  // 2) 保留你原本的 scrollToDept()，改用同一套平滑邏輯
+  window.scrollToDept = function(e){
+    if (e) e.preventDefault();
+    const target = document.getElementById('dept');
+    smoothScrollTo(target);
+    if (history.pushState) history.pushState(null, '', '#dept');
+  };
+})();
+
+/* 背景「首段平移」：在前 70vh 的捲動，把背景從 0% 補間到 100% */
+(function () {
+  const root = document.documentElement;
+  const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 在多少視窗高度內完成平移：60~80 之間都可，70vh 比較自然
+  const PAN_DISTANCE_VH = 70;
+
+  let ticking = false;
+
+  function update() {
+    const max = window.innerHeight * (PAN_DISTANCE_VH / 100);
+    // 只在頁面頂端的前 max 區間內做平移，之後就固定在 100%
+    const y = Math.max(0, Math.min(window.scrollY, max));
+    const t = max ? (y / max) : 0;          // 0 ~ 1
+    const pos = Math.round(t * 100);        // 0% ~ 100%
+    root.style.setProperty('--bg-pos', pos + '%');
+    ticking = false;
+  }
+
+  function onScroll() {
+    if (prefersReduce) return;              // 尊重「降低動效」
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', update);
+  update(); // 初始設為 0%
+})();
+
 
 
